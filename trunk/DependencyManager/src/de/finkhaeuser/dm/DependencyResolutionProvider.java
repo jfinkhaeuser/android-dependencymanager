@@ -121,7 +121,7 @@ public class DependencyResolutionProvider extends ContentProvider
   {
     // Ensure the query is valid
     int match = sUriMatcher.match(uri);
-    if (UriMatcher.NO_MATCh == match) {
+    if (UriMatcher.NO_MATCH == match) {
       throw new IllegalArgumentException("Unknown URI " + uri);
     }
 
