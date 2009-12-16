@@ -32,5 +32,15 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
+    <!-- This ContentProvider provides information for resolving
+         dependencies. -->
+    <provider android:name=".DependencyResolutionProvider"
+        android:authorities="de.finkhaeuser.dm"
+        android:exported="true"
+        android:multiprocess="false"
+        android:process="de.finkhaeuser.dm"
+      />
+
   </application>
 </manifest>
