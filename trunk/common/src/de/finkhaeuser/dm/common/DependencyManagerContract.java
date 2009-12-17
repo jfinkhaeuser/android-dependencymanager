@@ -1,0 +1,81 @@
+/**
+ * This file is part of the Android DependencyManager project hosted at
+ * http://code.google.com/p/android-dependencymanager/
+ *
+ * Copyright (C) 2009 Jens Finkhaeuser <jens@finkhaeuser.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ **/
+
+package de.finkhaeuser.dm.common;
+
+/**
+ * Contract between DependencyManager and dependency information data sources,
+ * as well as clients of DependencyManager.
+ **/
+public class DependencyManagerContract
+{
+  // Authority for  DependencyResolutionProvider
+  public static final String CONTENT_AUTHORITY      = "de.finkhaeuser.dm";
+
+  // Content URI paths. Requires a list of query-string encoded intents to list
+  //    candidates for.
+  public static final String PATH_LIST_CANDIDATES   = "list-candidates";
+
+  // Content Types
+  public static final String CANDIDATE_LIST_TYPE    = "vnd.android.cursor.dir/vnd.dependency.candidate";
+  public static final String CANDIDATE_TYPE         = "vnd.android.cursor.item/vnd.dependendcy.candidate";
+
+
+  /***************************************************************************
+   * Fields returned as part of CANDIDATE_TYPE/CANDIDATE_LIST_TYPE.
+   **/
+  public class DependencyColumns
+  {
+    // ** Results always include:
+    // STORE_PACKAGE is TEXT NOT NULL, descriping the package name of the store
+    //    app returning these results.
+    public static final String STORE_PACKAGE        = "dm_store_package";
+    // STORE_DISPLAY_NAME is TEXT NOT NULL, describing the display name of the
+    //    store app returning these results
+    public static final String STORE_DISPLAY_NAME   = "dm_store_display_name";
+    // ICON_URI is TEXT NOT NULL, to be parsed as a URI. The URI's scheme
+    //    determines how to access the icon image. The icon should represent the
+    //    package described via APP_PACAKGE et al. if those fields are returned,
+    //    or the store app if EXTERNAL_SEARCH_URI is non-NULL.
+    public static final String ICON_URI             = "dm_icon_uri";
+    // ** Results either include a non-NULL EXTERNAL_SEARCH_URI...
+    // EXTERNAL_SEARCH_URI is TEXT, to be parsed as a URI. Opening the URI via
+    //    an ACTION_VIEW Intent should launch the external search.
+    public static final String EXTERNAL_SEARCH_URI  = "dm_external_search_uri";
+    // ** ... or the following fields, but never both.
+    // APP_PACKAGE is TEXT, describing the package name of the package that
+    //    would satisfy a dependency.
+    public static final String APP_PACKAGE          = "dm_app_package";
+    // APP_DISPLAY_NAME is TEXT, describing the display name of the package
+    //    that would satisfy a dependency.
+    public static final String APP_DISPLAY_NAME     = "dm_app_display_name";
+    // APP_VENDOR_NAME is TEXT, describing the vendor/publisher of the package.
+    public static final String APP_VENDOR_NAME      = "dm_app_vendor_name";
+    // APP_PRICE is INTEGER, describing the price of the package in their
+    //    smallest monetary unit, i.e. cents for dollars and euros, etc.
+    public static final String APP_PRICE            = "dm_app_price";
+    // APP_CURRENCY is TEXT, specifying the ISO 4217 code for the currency the
+    //    price above is given in (see http://en.wikipedia.org/wiki/ISO_4217).
+    public static final String APP_CURRENCY         = "dm_app_currency";
+    // APP_MATCHES is TEXT, specifying a list of query-string encoded intents
+    //    that this package serves.
+    public static final String APP_MATCHES          = "dm_app_matches";
+  }
+}
+
