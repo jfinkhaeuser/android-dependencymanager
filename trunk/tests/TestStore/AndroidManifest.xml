@@ -31,6 +31,21 @@
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+      <intent-filter>
+        <action android:name="de.finkhaeuser.dm.intent.action.PACKAGE_INSTALL" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
     </activity>
+
+    <meta-data android:name="de.finkhaeuser.dm.dependency-source"
+        android:resource="@xml/dependency_source"
+      />
+
+
+    <!-- Test data source for DependencyResolutionProvider -->
+    <provider android:name=".TestStoreProvider"
+        android:authorities="de.finkhaeuser.dm.teststore"
+      />
+
   </application>
 </manifest> 
