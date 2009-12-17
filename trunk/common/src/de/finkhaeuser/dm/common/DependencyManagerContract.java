@@ -62,6 +62,11 @@ public class DependencyManagerContract
     // ** Results either include a non-NULL EXTERNAL_SEARCH_URI...
     // EXTERNAL_SEARCH_URI is TEXT, to be parsed as a URI. Opening the URI via
     //    an ACTION_VIEW Intent should launch the external search.
+    //    XXX It's pretty clear that ACTION_VIEW and a URI is not ideal for
+    //    specifying searches, but it happens to be what Android Market expects.
+    //    Since the whole point of including an (optional) external search
+    //    mechanism is to provide a bridge to legacy systems, implementing what
+    //    Android Market expects is only sensible.
     public static final String EXTERNAL_SEARCH_URI  = "dm_external_search_uri";
     // ** ... or the following fields, but never both.
     // APP_PACKAGE is TEXT, describing the package name of the package that
