@@ -32,6 +32,11 @@ public class DependencyManagerContract
   //    candidates for.
   public static final String PATH_LIST_CANDIDATES   = "list-candidates";
 
+  // Key for Intents serialized into URI query parameters. Intents must be
+  // encoded using Intent.toUri() with the URI_INTENT_SCHEME specified,
+  // and values for this key therefore must be urlencoded.
+  public static final String QUERY_PARAM_INTENT     = "intent";
+
   // Content Types
   public static final String CANDIDATE_LIST_TYPE    = "vnd.android.cursor.dir/vnd.dependency.candidate";
   public static final String CANDIDATE_TYPE         = "vnd.android.cursor.item/vnd.dependendcy.candidate";
