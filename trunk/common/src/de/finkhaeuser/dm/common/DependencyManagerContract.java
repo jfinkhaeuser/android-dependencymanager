@@ -45,7 +45,7 @@ public class DependencyManagerContract
   /***************************************************************************
    * Fields returned as part of CANDIDATE_TYPE/CANDIDATE_LIST_TYPE.
    **/
-  public class DependencyColumns
+  public static class DependencyColumns
   {
     // ** Results always include:
     // STORE_PACKAGE is TEXT NOT NULL, descriping the package name of the store
@@ -86,6 +86,20 @@ public class DependencyManagerContract
     // APP_MATCHES is TEXT, specifying a list of query-string encoded intents
     //    that this package serves.
     public static final String APP_MATCHES          = "dm_app_matches";
+
+    // Default projection
+    public static final String[] CANDIDATE_PROJECTION = {
+      STORE_PACKAGE,
+      STORE_DISPLAY_NAME,
+      ICON_URI,
+      EXTERNAL_SEARCH_URI,
+      APP_PACKAGE,
+      APP_DISPLAY_NAME,
+      APP_VENDOR_NAME,
+      APP_PRICE,
+      APP_CURRENCY,
+      APP_MATCHES,
+    };
   }
 }
 
