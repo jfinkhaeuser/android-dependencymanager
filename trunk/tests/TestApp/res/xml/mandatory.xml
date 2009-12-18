@@ -17,24 +17,17 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.finkhaeuser.dm.testapp"
-    android:versionCode="1"
-    android:versionName="1.0"
+<mandatory-intents
+     xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:dm="http://schemas.finkhaeuser.de/android/dependency-manager/mandatory-intents"
   >
-  <application android:label="@string/app_name">
-    <activity
-        android:name="TestApp"
-        android:label="@string/app_name"
-      >
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
-      <meta-data android:name="de.finkhaeuser.dm.mandatory-intents"
-          android:resource="@xml/mandatory"
-        />
-    </activity>
-  </application>
-</manifest> 
+  <!-- Implicit Intent -->
+  <intent component-type="activity">
+    <action android:name="android.intent.action.BAZ"/>
+    <data android:scheme="quux" />
+  </intent>
+  <!-- Explicit Intent -->
+  <intent component-type="receiver">
+    <component android:name="foo.bar.BazReceiver" />
+  </intent>
+</mandatory-intents>
