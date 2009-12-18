@@ -22,6 +22,14 @@ package de.finkhaeuser.dm.testapp;
 import android.app.Activity;
 import android.os.Bundle;
 
+import android.database.Cursor;
+
+import android.net.Uri;
+
+import de.finkhaeuser.dm.common.DependencyManagerContract;
+import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
+
+
 public class TestApp extends Activity
 {
   /** Called when the activity is first created. */
@@ -30,5 +38,16 @@ public class TestApp extends Activity
   {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+
+    // XXX This'll need to change. It's just to launch the DpendencyManager
+    // right now.
+    Cursor managedCursor = managedQuery(
+        Uri.parse(String.format("content://%s/%s",
+            DependencyManagerContract.CONTENT_AUTHORITY,
+            DependencyManagerContract.PATH_LIST_CANDIDATES)),
+        DependencyColumns.CANDIDATE_PROJECTION,
+        null,          // WHERE clause.
+        null,          // WHERE clause value substitution
+        null);   // Sort order.
   }
 }
