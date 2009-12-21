@@ -90,7 +90,7 @@ public class Intents
     for (Intent i : intents) {
       result = String.format("%s&%s=%s", result,
           DependencyManagerContract.QUERY_PARAM_INTENT,
-          i.toUri(Intent.URI_INTENT_SCHEME));
+          Uri.encode(i.toUri(Intent.URI_INTENT_SCHEME)));
     }
 
     if (0 >= result.length()) {
@@ -110,7 +110,7 @@ public class Intents
   {
     return String.format("%s=%s",
         DependencyManagerContract.QUERY_PARAM_INTENT,
-        intent.toUri(Intent.URI_INTENT_SCHEME));
+        Uri.encode(intent.toUri(Intent.URI_INTENT_SCHEME)));
   }
 
 }
