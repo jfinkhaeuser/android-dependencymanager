@@ -100,4 +100,17 @@ public class Intents
     // Trim leading ampersand
     return result.substring(1);
   }
+
+
+
+  /**
+   * Serialize a single Intent. @see serializeIntents
+   **/
+  public static String serializeIntent(Intent intent)
+  {
+    return String.format("%s=%s",
+        DependencyManagerContract.QUERY_PARAM_INTENT,
+        intent.toUri(Intent.URI_INTENT_SCHEME));
+  }
+
 }
