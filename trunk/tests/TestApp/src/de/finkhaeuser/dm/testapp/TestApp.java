@@ -20,18 +20,57 @@
 package de.finkhaeuser.dm.testapp;
 
 import android.app.Activity;
+
 import android.os.Bundle;
+import android.os.Handler;
+
+import android.content.Intent;
 
 import android.database.Cursor;
+import android.database.ContentObserver;
+import android.database.DataSetObserver;
 
 import android.net.Uri;
 
+import java.util.LinkedList;
+
 import de.finkhaeuser.dm.common.DependencyManagerContract;
 import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
+import de.finkhaeuser.dm.common.Intents;
+
+import android.util.Log;
 
 
 public class TestApp extends Activity
 {
+  public static final String LTAG = "TestApp";
+
+  class Foo extends ContentObserver
+  {
+    Cursor mCursor;
+    public Foo(Cursor c)
+    {
+      super(new Handler());
+      mCursor = c;
+    }
+
+    public void onChange(boolean selfChange)
+    {
+      Log.d(LTAG, "on change");
+      mCursor.requery();
+      Log.d(LTAG, "size after requery: " + mCursor.getCount());
+      mCursor.moveToFirst();
+      do {
+        String pkg = mCursor.getString(mCursor.getColumnIndex(
+              DependencyColumns.APP_PACKAGE));
+        Log.d(LTAG, "package: " + pkg);
+        mCursor.moveToNext();
+      } while (!mCursor.isAfterLast());
+
+    }
+  }
+
+
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState)
@@ -39,15 +78,43 @@ public class TestApp extends Activity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
+    // Create an Intent that we'll query for. XXX This is manual now, but should
+    // be read from the mandatory intents in the longer term.
+    LinkedList<Intent> il = new LinkedList<Intent>();
+
+    Intent i = new Intent();
+    i.setAction("dummyAction");
+    i.addCategory("dummyCategory");
+    il.add(i);
+    i = new Intent();
+    i.setAction("action2");
+    i.addCategory("cat2");
+    il.add(i);
+
+    Uri uri = Uri.parse(String.format("content://%s/%s?%s",
+            DependencyManagerContract.CONTENT_AUTHORITY,
+            DependencyManagerContract.PATH_LIST_CANDIDATES,
+            Intents.serializeIntents(il)));
+
     // XXX This'll need to change. It's just to launch the DpendencyManager
     // right now.
-    Cursor managedCursor = managedQuery(
-        Uri.parse(String.format("content://%s/%s",
-            DependencyManagerContract.CONTENT_AUTHORITY,
-            DependencyManagerContract.PATH_LIST_CANDIDATES)),
+    Cursor managedCursor = managedQuery(uri,
         DependencyColumns.CANDIDATE_PROJECTION,
         null,          // WHERE clause.
         null,          // WHERE clause value substitution
         null);   // Sort order.
+
+    Log.d(LTAG, "count: " + managedCursor.getCount());
+    managedCursor.registerContentObserver(new Foo(managedCursor));
+
+    if (0 < managedCursor.getCount()) {
+      managedCursor.moveToFirst();
+      do {
+        String pkg = managedCursor.getString(managedCursor.getColumnIndex(
+              DependencyColumns.APP_PACKAGE));
+        Log.d(LTAG, "package: " + pkg);
+        managedCursor.moveToNext();
+      } while (!managedCursor.isAfterLast());
+    }
   }
 }
