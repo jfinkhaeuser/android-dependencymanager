@@ -24,8 +24,16 @@ import android.net.Uri;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
+import android.content.Intent;
 
 import android.database.Cursor;
+
+import java.util.List;
+import java.util.LinkedList;
+
+import de.finkhaeuser.dm.common.DependencyManagerContract;
+import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
+import de.finkhaeuser.dm.common.Intents;
 
 import android.util.Log;
 
@@ -36,44 +44,38 @@ import android.util.Log;
 public class DependencyResolutionProvider extends ContentProvider
 {
   /***************************************************************************
-   * Public constants
-   **/
-  // Log Tag
-  public static final String LTAG = "DependencyResolutionProvider";
-
-  // Base URI for this ContentProvider
-  public static final String CONTENT_AUTHORITY    = "de.finkhaeuser.dm";
-
-  // Content URI paths
-  public static final String PATH_LIST_CANDIDATES = "list-candidates";
-
-  // Content Types
-  public static final String CANDIDATE_LIST_TYPE  = "vnd.android.cursor.dir/vnd.dependency.candidate";
-  public static final String CANDIDATE_TYPE       = "vnd.android.cursor.item/vnd.dependendcy.candidate";
-
-  // CANDIDATE_TYPE-related fields
-  // Results always include:
-  public static final String STORE_PACKAGE        = "dm_store_package";
-  public static final String STORE_DISPLAY_NAME   = "dm_store_display_name";
-  public static final String ICON_URI             = "dm_icon_uri";
-  // Results either include a non-NULL EXTERNAL_SEARCH_URI...
-  public static final String EXTERNAL_SEARCH_URI  = "dm_external_search_uri";
-  // ... or the following fields, but never both.
-  public static final String APP_PACKAGE          = "dm_app_package";
-  public static final String APP_DISPLAY_NAME     = "dm_app_display_name";
-  public static final String APP_VENDOR_NAME      = "dm_app_vendor_name";
-  public static final String APP_PRICE            = "dm_app_price";
-  public static final String APP_CURRENCY         = "dm_app_currency";
-  public static final String APP_MATCHES          = "dm_app_matches";
-
-
-
-  /***************************************************************************
    * Private constants
    **/
-  // IDs for URI matches.
-  private static final int ID_LIST_CANDIDATES     = 1;
+  // Log Tag
+  private static final String LTAG                  = "DependencyResolutionProvider";
 
+  // Base URI for this ContentProvider
+  private static final String CONTENT_AUTHORITY     = DependencyManagerContract.CONTENT_AUTHORITY;
+
+  // Content URI paths
+  private static final String PATH_LIST_CANDIDATES  = DependencyManagerContract.PATH_LIST_CANDIDATES;
+
+  // Content Types
+  private static final String CANDIDATE_LIST_TYPE   = DependencyManagerContract.CANDIDATE_LIST_TYPE;
+  private static final String CANDIDATE_TYPE        = DependencyManagerContract.CANDIDATE_TYPE;
+
+  // CANDIDATE_TYPE-related fields
+  private static final String STORE_PACKAGE         = DependencyColumns.STORE_PACKAGE;
+  private static final String STORE_DISPLAY_NAME    = DependencyColumns.STORE_DISPLAY_NAME;
+  private static final String ICON_URI              = DependencyColumns.ICON_URI;
+  private static final String EXTERNAL_SEARCH_URI   = DependencyColumns.EXTERNAL_SEARCH_URI;
+  private static final String APP_PACKAGE           = DependencyColumns.APP_PACKAGE;
+  private static final String APP_DISPLAY_NAME      = DependencyColumns.APP_DISPLAY_NAME;
+  private static final String APP_VENDOR_NAME       = DependencyColumns.APP_VENDOR_NAME;
+  private static final String APP_PRICE             = DependencyColumns.APP_PRICE;
+  private static final String APP_CURRENCY          = DependencyColumns.APP_CURRENCY;
+  private static final String APP_MATCHES           = DependencyColumns.APP_MATCHES;
+
+  // IDs for URI matches.
+  private static final int ID_LIST_CANDIDATES       = 1;
+
+  // Timout (in milliseconds) for the validity of the mSources field below.
+  private static final long SOURCES_VALID_TIMEOUT   = 30 * 1000;
 
 
   /***************************************************************************
@@ -87,13 +89,78 @@ public class DependencyResolutionProvider extends ContentProvider
 
 
   /***************************************************************************
+   * Private data
+   **/
+  // Lock for mSources & related fields
+  private Object                  mSourcesLock = new Object();
+  // Sources from which this provider draws information.
+  private List<DependencySource>  mSources;
+  // Timestamp at which mSources was last updated.
+  private long                    mSourcesTimestamp = -1;
+
+
+
+  /***************************************************************************
+   * Comparator classes for AggregateCursor use.
+   **/
+
+  /**
+   * Compares two rows by the number of Intents matched in the APP_MATCHES
+   * field. No further comparison of *which* Intents were matched is made.
+   **/
+  private static class MatchCountComparator extends AggregateCursor.RowComparator
+  {
+    public int compareCurrentRows(Cursor c1, Cursor c2)
+    {
+      String match_str1 = c1.getString(c1.getColumnIndex(APP_MATCHES));
+      String match_str2 = c2.getString(c2.getColumnIndex(APP_MATCHES));
+
+      // Shortcuts to full comparison.
+      if (null == match_str1 && null == match_str2) {
+        return 0;
+      }
+      else if (null == match_str1) {
+        return 1;
+      }
+      else if (null == match_str2) {
+        return -1;
+      }
+
+      if (match_str1.equals(match_str2)) {
+        return 0;
+      }
+
+      // Shortcuts are exhausted, now we'll need to deserialize the Intents and
+      // compare the match size.
+      List<Intent> matches1 = Intents.parseIntents(Uri.parse(
+            String.format("dummy:///?%s", match_str1)));
+      List<Intent> matches2 = Intents.parseIntents(Uri.parse(
+            String.format("dummy:///?%s", match_str2)));
+
+      if (matches1.size() > matches2.size()) {
+        return -1;
+      }
+      else if (matches1.size() < matches2.size()) {
+        return 1;
+      }
+      return 0;
+    }
+  }
+
+
+
+  /***************************************************************************
    * Implementation
    */
 
   @Override
   public boolean onCreate()
   {
-    // TODO scan installed packages for data sources
+    synchronized (mSourcesLock)
+    {
+      updateSources();
+    }
+
     return true;
   }
 
@@ -125,9 +192,34 @@ public class DependencyResolutionProvider extends ContentProvider
       throw new IllegalArgumentException("Unknown URI " + uri);
     }
 
-    // TODO
+    // Grab the sources to query for this request.
+    LinkedList<DependencySource> sources = null;
+    synchronized (mSourcesLock)
+    {
+      updateSources();
+      sources = new LinkedList<DependencySource>(mSources);
+    }
+    if (0 >= sources.size()) {
+      throw new IllegalStateException("Can't respond to query; no data sources known.");
+    }
 
-    return null;
+    // Create AggregateCursor into which sources can insert their data.
+    // TODO add other comparators, select based on sortOrder argument
+    AggregateCursor cursor = new AggregateCursor(projection,
+        new MatchCountComparator());
+
+    // The notification uri for the cursor is the original uri.
+    cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+    // For each source, create a thread in which to fetch data from.
+    for (DependencySource source : sources) {
+      DependencySourceThread th = new DependencySourceThread(getContext(),
+          cursor, source);
+      th.setQuery(uri, projection, selection, selectionArgs);
+      th.start();
+    }
+
+    return cursor;
   }
 
 
@@ -156,5 +248,23 @@ public class DependencyResolutionProvider extends ContentProvider
   {
     throw new java.lang.SecurityException(LTAG + " does not support "
         + "write access.");
+  }
+
+
+
+  /**
+   * If necessary, update mSources. Expects mSourcesLock to be held by the
+   * caller.
+   **/
+  private void updateSources()
+  {
+    long now = System.currentTimeMillis();
+    long diff = now - mSourcesTimestamp;
+    if (-1 == mSourcesTimestamp || null == mSources
+        || SOURCES_VALID_TIMEOUT <= diff)
+    {
+      mSources = DependencySource.scanForSources(getContext());
+      mSourcesTimestamp = now;
+    }
   }
 }
