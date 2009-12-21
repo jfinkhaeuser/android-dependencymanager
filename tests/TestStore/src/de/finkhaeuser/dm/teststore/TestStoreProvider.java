@@ -136,6 +136,8 @@ public class TestStoreProvider extends ContentProvider
       throw new IllegalArgumentException("No Intents specified in URI " + uri);
     }
 
+    Log.d(LTAG, "Query: " + uri);
+
     // Create cursor.
     MatrixCursor c = new MatrixCursor(new String[] {
           STORE_PACKAGE,
@@ -192,7 +194,7 @@ public class TestStoreProvider extends ContentProvider
           null,                                 // APP_VENDOR_NAME
           null,                                 // APP_PRICE
           null,                                 // APP_CURRENCY
-          Intents.serializeIntents(intents)     // APP_MATCHES
+          null,                                 // APP_MATCHES
         });
 
     return c;
