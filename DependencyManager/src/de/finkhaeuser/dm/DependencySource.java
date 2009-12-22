@@ -85,9 +85,12 @@ class DependencySource
 
     for (ResolveInfo resolveInfo : candidates) {
       ApplicationInfo appInfo = resolveInfo.activityInfo.applicationInfo;
-      DependencySource ds = DependencySource.createFromPackage(context, appInfo);
-      if (null != ds) {
-        sources.add(ds);
+      List<DependencySource> dsl = DependencySource.createFromPackage(context,
+          appInfo);
+      if (null != dsl) {
+        for (DependencySource ds : dsl) {
+          sources.add(ds);
+        }
       }
     }
 
@@ -102,13 +105,12 @@ class DependencySource
   /**
    * Use this function to create DependencySource objects.
    **/
-  public static DependencySource createFromPackage(Context context,
+  public static List<DependencySource> createFromPackage(Context context,
       ApplicationInfo appInfo)
   {
     PackageManager pm = context.getPackageManager();
 
     String pkgName = appInfo.packageName;
-    String authority = null;
 
     XmlResourceParser xml = appInfo.loadXmlMetaData(pm,
         Schemas.Source.META_DATA_LABEL);
@@ -118,16 +120,25 @@ class DependencySource
       return null;
     }
 
+    LinkedList<DependencySource> result = new LinkedList<DependencySource>();
     try {
       int tagType = xml.next();
       while (XmlPullParser.END_DOCUMENT != tagType) {
 
         if (XmlPullParser.START_TAG == tagType) {
           if (xml.getName().equals(Schemas.Source.ELEM_DEPENDENCY_SOURCE)) {
-            AttributeSet attr = Xml.asAttributeSet(xml);
-            if (null != attr) {
-              authority = attr.getAttributeValue(Schemas.Source.SCHEMA,
-                  Schemas.Source.ATTR_AUTHORITY);
+
+            for (int i = 0 ; i < xml.getAttributeCount() ; ++i) {
+              if (!Schemas.Source.SCHEMA.equals(xml.getAttributeNamespace(i))) {
+                continue;
+              }
+              if (!Schemas.Source.ATTR_AUTHORITY.equals(xml.getAttributeName(i))) {
+                continue;
+              }
+
+              // We've got an authority at index i.
+              String authority = xml.getAttributeValue(i);
+              result.add(new DependencySource(pkgName, authority));
             }
           }
         }
@@ -145,14 +156,13 @@ class DependencySource
 
     xml.close();
 
-    // If authority is null, we consider parsing to have failed.
-    if (null == authority) {
+    // We want at least one result, or else we consider parsing to have failed.
+    if (0 >= result.size()) {
       Log.e(LTAG, String.format("No data source authority found for package '%s'",
             pkgName));
       return null;
     }
-
-    return new DependencySource(pkgName, authority);
+    return result;
   }
 
 
