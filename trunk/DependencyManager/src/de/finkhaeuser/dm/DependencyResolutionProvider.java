@@ -206,7 +206,7 @@ public class DependencyResolutionProvider extends ContentProvider
     // Create AggregateCursor into which sources can insert their data.
     // TODO add other comparators, select based on sortOrder argument
     AggregateCursor cursor = new AggregateCursor(projection,
-        new MatchCountComparator());
+        new MatchCountComparator(), true);
 
     // The notification uri for the cursor is the original uri.
     cursor.setNotificationUri(getContext().getContentResolver(), uri);

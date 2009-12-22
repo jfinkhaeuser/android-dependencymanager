@@ -57,6 +57,7 @@ class AggregateCursor extends AbstractCursor
   private int rowCount = 0;
   private final int columnCount;
   private RowComparator comparator;
+  private boolean unique = false;
 
 
   /***************************************************************************
@@ -90,14 +91,16 @@ class AggregateCursor extends AbstractCursor
    *  determines column ordering elsewhere in this cursor
    * @param comparator RowComparator-derived instance used to determine where
    *  to sort newly merged rows.
+   * @param uniqe if set, duplicate rows are merged
    * @param initialCapacity in rows
    */
   public AggregateCursor(String[] columnNames, RowComparator comparator,
-      int initialCapacity)
+      boolean unique, int initialCapacity)
   {
     this.columnNames = columnNames;
     this.columnCount = columnNames.length;
     this.comparator = comparator;
+    this.unique = unique;
 
     if (initialCapacity < 1) {
       initialCapacity = 1;
@@ -115,10 +118,27 @@ class AggregateCursor extends AbstractCursor
    *  determines column ordering elsewhere in this cursor
    * @param comparator RowComparator-derived instance used to determine where
    *  to sort newly merged rows.
+   * @param uniqe if set, duplicate rows are merged
+   */
+  public AggregateCursor(String[] columnNames, RowComparator comparator,
+      boolean unique)
+  {
+    this(columnNames, comparator, unique, 16);
+  }
+
+
+
+  /**
+   * Constructs a new non-unique cursor.
+   *
+   * @param columnNames names of the columns, the ordering of which
+   *  determines column ordering elsewhere in this cursor
+   * @param comparator RowComparator-derived instance used to determine where
+   *  to sort newly merged rows.
    */
   public AggregateCursor(String[] columnNames, RowComparator comparator)
   {
-    this(columnNames, comparator, 16);
+    this(columnNames, comparator, false, 16);
   }
 
 
@@ -156,8 +176,14 @@ class AggregateCursor extends AbstractCursor
 
     // Append other's rows.
     other.moveToFirst();
-    do {
+    for ( ; !other.isAfterLast() ; other.moveToNext()) {
       int idx = insertIndex(other, 0, rowCount);
+      if (-1 == idx) {
+        // Only happens when unique is set. The current row is a duplicate we
+        // need to ignore.
+        continue;
+      }
+
 
       // If we insert *before* current, then we must increment current for it
       // to point at the same row again.
@@ -177,10 +203,7 @@ class AggregateCursor extends AbstractCursor
         // convert to the desired type.
         data[(idx * columnCount) + i] = other.getString(other.getColumnIndex(columnNames[i]));
       }
-
-      other.moveToNext();
-
-    } while (!other.isAfterLast());
+    }
 
     // Restore current
     moveToPosition(current);
@@ -190,7 +213,9 @@ class AggregateCursor extends AbstractCursor
 
   /**
    * Helper function for merge(). Uses quicksort-like algorithm for determining
-   * where to insert the row cursor currently points at.
+   * where to insert the row cursor currently points at. May return -1 if the
+   * new row is a duplicate and the unique flag is set. Thanks to the fact that
+   * data is sorted, that'll avoid duplicates nicely.
    **/
   private int insertIndex(Cursor cursor, int left, int right)
   {
@@ -209,7 +234,15 @@ class AggregateCursor extends AbstractCursor
     else if (cres > 0) {
       return insertIndex(cursor, left, pivot);
     }
-    return pivot;
+
+    if (unique) {
+      // Discard duplicates
+      return -1;
+    }
+    else {
+      // Keep duplicates
+      return pivot;
+    }
   }
 
 
