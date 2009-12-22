@@ -138,7 +138,20 @@ class DependencySource
 
               // We've got an authority at index i.
               String authority = xml.getAttributeValue(i);
-              result.add(new DependencySource(pkgName, authority));
+
+              // Ignore this authority if we've already got it in the result set
+              boolean skipSource = false;
+              for (DependencySource ds : result) {
+                if (ds.getContentAuthority().equals(authority)) {
+                  Log.w(LTAG, "The same content authority is defined more than "
+                      + "once, ignoring multiple definitions.");
+                  skipSource = true;
+                }
+              }
+
+              if (!skipSource) {
+                result.add(new DependencySource(pkgName, authority));
+              }
             }
           }
         }
