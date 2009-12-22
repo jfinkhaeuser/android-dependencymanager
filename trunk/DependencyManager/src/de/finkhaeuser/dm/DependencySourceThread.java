@@ -22,7 +22,11 @@ package de.finkhaeuser.dm;
 import android.content.Context;
 import android.content.ContentResolver;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import android.database.Cursor;
+import android.database.ContentObserver;
 
 import android.net.Uri;
 
@@ -31,7 +35,7 @@ import de.finkhaeuser.dm.common.DependencyManagerContract;
 import android.util.Log;
 
 /**
- * Runnable for fetching data from a dependency source. Each source can take a
+ * Thread for fetching data from a dependency source. Each source can take a
  * while to respond. Fetching from multiple sources would imply that in the
  * worst case, results never make it to the user if the first source blocks
  * indefinitely.
@@ -42,17 +46,13 @@ import android.util.Log;
  * XXX Access to the AggregateCursor from these threads are synchronized on the
  *     cursor object itself. Access to the same cursor from other threads must
  *     also be synchronized.
- *
- * TODO: If the sources employ a similar approach to IntentManager, and return
- *       an empty cursor that they'll update as data arrives, then installing
- *       an observer in this thread would be useful.
  **/
-class DependencySourceRunnable extends Runnable
+class DependencySourceThread extends Thread
 {
   /***************************************************************************
    * Private constants
    **/
-  public static final String LTAG = "DependencySourceRunnable";
+  public static final String LTAG = "DependencySourceThread";
 
 
 
@@ -74,12 +74,39 @@ class DependencySourceRunnable extends Runnable
   private String            mSelection;
   private String[]          mSelectionArgs;
 
+  // Flag for notifying thread of changes
+  private volatile boolean  mContentChanged = false;
+  private Object            mContentChangedLock = new Object();
+
+
+
+  /***************************************************************************
+   * Observer for late content changes.
+   **/
+  class LateChangeObserver extends ContentObserver
+  {
+    public LateChangeObserver()
+    {
+      super(new Handler());
+    }
+
+
+
+    public void onChange(boolean selfChange)
+    {
+      synchronized (mContentChangedLock) {
+        mContentChanged = true;
+      }
+      interrupt();
+    }
+  }
+
 
 
   /***************************************************************************
    * Implementation
    **/
-  public DependencySourceRunnable(Context context, AggregateCursor resultCursor,
+  public DependencySourceThread(Context context, AggregateCursor resultCursor,
       DependencySource source)
   {
     super();
@@ -119,12 +146,54 @@ class DependencySourceRunnable extends Runnable
     }
 
     // Merge results into the result cursor
-    if (0 < c.getCount()) {
-      synchronized (mResultCursor) {
-        mResultCursor.merge(c);
+    mergeResults(c);
+
+    // Register for notificiations on the modified URI, then wait for a while
+    // for such notifications to occur. Each time we receive a change, we'll
+    // restart the sleep, which can technically extend the period during which
+    // we receive changes indefinitely.
+    Looper.prepare(); // XXX don't really care about that, but it's required.
+    LateChangeObserver observer = new LateChangeObserver();
+    c.registerContentObserver(observer);
+    boolean changed = false;
+    do {
+      try {
+        sleep(DependencyManagerContract.SOURCE_REQUERY_TIMEOUT);
+      } catch (InterruptedException ex) {
+        // pass
       }
-      // Notify observers of the result cursor of the changes.
-      cr.notifyChange(mOriginalUri, null);
+
+      synchronized (mContentChangedLock) {
+        changed = mContentChanged;
+        mContentChanged = false;
+      }
+
+      // Now that we've slept, check for late changes. We'll reach here either
+      // by the LateChangeObserver calling interrupt(), or by the sleep timing
+      // out.
+      if (changed) {
+        c.requery();
+        mergeResults(c);
+      }
+    } while (changed);
+
+    // Stop waiting for changes
+    c.unregisterContentObserver(observer);
+  }
+
+
+
+  private void mergeResults(Cursor c)
+  {
+    if (null == c || 0 >= c.getCount()) {
+      return;
     }
+
+    synchronized (mResultCursor) {
+      mResultCursor.merge(c);
+    }
+
+    // Notify observers of the result cursor of the changes.
+    mContext.getContentResolver().notifyChange(mOriginalUri, null);
   }
 }
