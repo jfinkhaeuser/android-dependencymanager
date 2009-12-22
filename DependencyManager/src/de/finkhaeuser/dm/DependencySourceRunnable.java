@@ -26,10 +26,12 @@ import android.database.Cursor;
 
 import android.net.Uri;
 
+import de.finkhaeuser.dm.common.DependencyManagerContract;
+
 import android.util.Log;
 
 /**
- * Thread for fetching data from a dependency source. Each source can take a
+ * Runnable for fetching data from a dependency source. Each source can take a
  * while to respond. Fetching from multiple sources would imply that in the
  * worst case, results never make it to the user if the first source blocks
  * indefinitely.
@@ -45,12 +47,12 @@ import android.util.Log;
  *       an empty cursor that they'll update as data arrives, then installing
  *       an observer in this thread would be useful.
  **/
-class DependencySourceThread extends Thread
+class DependencySourceRunnable extends Runnable
 {
   /***************************************************************************
    * Private constants
    **/
-  public static final String LTAG = "DependencySourceThread";
+  public static final String LTAG = "DependencySourceRunnable";
 
 
 
@@ -77,7 +79,7 @@ class DependencySourceThread extends Thread
   /***************************************************************************
    * Implementation
    **/
-  public DependencySourceThread(Context context, AggregateCursor resultCursor,
+  public DependencySourceRunnable(Context context, AggregateCursor resultCursor,
       DependencySource source)
   {
     super();
@@ -112,13 +114,17 @@ class DependencySourceThread extends Thread
     // Fetch data from the source.
     Cursor c = cr.query(mUri, mProjection, mSelection, mSelectionArgs,
         null);
-
-    // Merge results into the result cursor
-    synchronized (mResultCursor) {
-      mResultCursor.merge(c);
+    if (null == c) {
+      return;
     }
 
-    // Notify observers of the result cursor of the changes.
-    cr.notifyChange(mOriginalUri, null);
+    // Merge results into the result cursor
+    if (0 < c.getCount()) {
+      synchronized (mResultCursor) {
+        mResultCursor.merge(c);
+      }
+      // Notify observers of the result cursor of the changes.
+      cr.notifyChange(mOriginalUri, null);
+    }
   }
 }
