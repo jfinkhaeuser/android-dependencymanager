@@ -213,8 +213,8 @@ public class DependencyResolutionProvider extends ContentProvider
 
     // For each source, create a thread in which to fetch data from.
     for (DependencySource source : sources) {
-      DependencySourceThread th = new DependencySourceThread(getContext(),
-          cursor, source);
+      DependencySourceThread th = new Thread(new DependencySourceRunnable(
+            getContext(), cursor, source));
       th.setQuery(uri, projection, selection, selectionArgs);
       th.start();
     }
