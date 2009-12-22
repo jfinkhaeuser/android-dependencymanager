@@ -17,17 +17,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<mandatory-intents
-     xmlns:android="http://schemas.android.com/apk/res/android"
-     xmlns:dm="http://schemas.finkhaeuser.de/android/dependency-manager/mandatory-intents"
+<dependencies
+     xmlns:dm="http://schemas.finkhaeuser.de/android/dependency-manager/1.0/client/"
   >
+
   <!-- Implicit Intent -->
-  <intent component-type="activity">
-    <action android:name="android.intent.action.BAZ"/>
-    <data android:scheme="quux" />
+  <intent dm:component-type="activity">
+    <action dm:name="android.intent.action.BAZ"/>
+    <data dm:scheme="quux" />
   </intent>
+
   <!-- Explicit Intent -->
-  <intent component-type="receiver">
-    <component android:name="foo.bar.BazReceiver" />
+  <intent dm:component-type="receiver">
+    <component dm:name="foo.bar.BazReceiver" />
   </intent>
-</mandatory-intents>
+</dependencies>
