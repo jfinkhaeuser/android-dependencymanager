@@ -25,7 +25,7 @@ package de.finkhaeuser.dm.common;
  **/
 public class DependencyManagerContract
 {
-  // Authority for  DependencyResolutionProvider
+  // Authority for DependencyResolutionProvider
   public static final String CONTENT_AUTHORITY      = "de.finkhaeuser.dm";
 
   // Content URI paths. Requires a list of query-string encoded intents to list
@@ -40,6 +40,11 @@ public class DependencyManagerContract
   // Content Types
   public static final String CANDIDATE_LIST_TYPE    = "vnd.android.cursor.dir/vnd.dependency.candidate";
   public static final String CANDIDATE_TYPE         = "vnd.android.cursor.item/vnd.dependendcy.candidate";
+
+  // Timeout (in msec) for dependency source requeries - DependencyManager will
+  // listen to notifications on the source's content URI for this time, and
+  // propagate changes.
+  public static final int SOURCE_REQUERY_TIMEOUT    = 5 * 1000;
 
 
   /***************************************************************************
