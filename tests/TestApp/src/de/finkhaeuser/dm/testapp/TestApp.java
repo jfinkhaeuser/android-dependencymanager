@@ -38,12 +38,16 @@ import de.finkhaeuser.dm.common.DependencyManagerContract;
 import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
 import de.finkhaeuser.dm.common.Intents;
 
+import de.finkhaeuser.dm.client.DependencyManager;
+
 import android.util.Log;
 
 
-public class TestApp extends Activity
+public class TestApp extends Activity implements DependencyManager.BindListener
 {
   public static final String LTAG = "TestApp";
+
+  private DependencyManager mDependencyManager;
 
   class Foo extends ContentObserver
   {
@@ -116,5 +120,27 @@ public class TestApp extends Activity
         managedCursor.moveToNext();
       } while (!managedCursor.isAfterLast());
     }
+
+
+    // Test service!
+    DependencyManager.bindService(this, this);
   }
+
+
+
+  public void onBound(DependencyManager dm)
+  {
+    mDependencyManager = dm;
+    mDependencyManager.resolveDependencies(getPackageName());
+  }
+
+
+
+  @Override
+  public void onStop()
+  {
+    super.onStop();
+    mDependencyManager.unbindService();
+  }
+
 }
