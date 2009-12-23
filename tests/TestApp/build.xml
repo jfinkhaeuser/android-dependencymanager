@@ -64,4 +64,53 @@
     -->
     <setup />
 
+    <!-- Create the output directories if they don't exist yet. -->
+    <target name="-real-dirs">
+      <echo>Creating output directories if needed...</echo>
+      <mkdir dir="${resource.absolute.dir}" />
+      <mkdir dir="${external.libs.absolute.dir}" />
+      <mkdir dir="${gen.absolute.dir}" />
+      <mkdir dir="${out.absolute.dir}" />
+      <mkdir dir="${out.classes.absolute.dir}" />
+    </target>
+
+
+    <!-- Client lib target -->
+    <property name="client.dir" value="externals/client" />
+    <property name="client.absolute.dir" location="${client.dir}" />
+
+    <target name="client.check" depends="-real-dirs">
+      <condition property="client.exists">
+        <and>
+          <available file="${external.libs.absolute.dir}/DependencyManager-client.jar" />
+        </and>
+      </condition>
+    </target>
+
+    <target name="-client" depends="-real-dirs, client.check" unless="client.exists">
+      <echo>Building client library...</echo>
+      <ant
+          antfile="build.xml"
+          dir="externals/client"
+          target="build"
+          inheritAll="false"
+        />
+      <copy todir="${external.libs.absolute.dir}" file="${client.absolute.dir}/bin/DependencyManager-client.jar"/>
+    </target>
+
+    <!-- Bootstrap target -->
+    <target name="-bootstrap" depends="-client" />
+
+    <!-- Override "dirs" target that is referenced from other targets. Just depends on
+         bootstrap, to kickstart our own stuff here. -->
+    <target name="-dirs" depends="-bootstrap" />
+
+    <!-- Override "clean" target -->
+    <target name="clean" description="Removes output files created by other targets.">
+      <delete dir="${out.absolute.dir}" verbose="${verbose}" />
+      <delete dir="${gen.absolute.dir}" verbose="${verbose}" />
+      <delete file="${external.libs.absolute.dir}/DependencyManager-client.jar" verbose="${verbose}" />
+    </target>
+
+
 </project>
