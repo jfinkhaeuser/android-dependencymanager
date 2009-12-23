@@ -27,12 +27,14 @@ import android.content.ComponentName;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import android.os.Looper;
+
 import de.finkhaeuser.dm.IDependencyManager;
 
 import android.util.Log;
 
 /**
- * Client object to the IDependencyManager interface; encapsulates binding to
+ * Client object to the IDependencyManager interface; simplifies binding to
  * the service.
  **/
 public class DependencyManager
@@ -40,33 +42,42 @@ public class DependencyManager
   /***************************************************************************
    * Private constants
    **/
-  private static final String LTAG = "AggregateCursor";
+  private static final String LTAG = "DependencyManager";
+
+
+
+  /***************************************************************************
+   * Implement BindListener to receive a DependencyManager instance that's
+   * bound to IDependencyManager.
+   **/
+  public interface BindListener
+  {
+    public void onBound(DependencyManager dm);
+  }
+
 
 
   /***************************************************************************
    * Private data
    **/
-  private Context             mContext;
+  private Context                     mContext;
+  private BindListener                mBindListener;
 
-  // Service stub & lock for synchronous access
-  private Object              mStubLock = new Object();
-  private IDependencyManager  mStub = null;
+  // Service stub
+  private volatile IDependencyManager mStub = null;
 
   // Service connection
-  private ServiceConnection   mConnection = new ServiceConnection() {
+  private ServiceConnection           mConnection = new ServiceConnection() {
     public void onServiceConnected(ComponentName className, IBinder service)
     {
-      synchronized (mStubLock) {
-        mStub = IDependencyManager.Stub.asInterface(service);
-      }
+      mStub = IDependencyManager.Stub.asInterface(service);
+      mBindListener.onBound(DependencyManager.this);
     }
 
 
     public void onServiceDisconnected(ComponentName className)
     {
-      synchronized (mStubLock) {
-        mStub = null;
-      }
+      mStub = null;
     }
   };
 
@@ -75,9 +86,48 @@ public class DependencyManager
   /***************************************************************************
    * Extra functions
    **/
-  public DependencyManager(Context context)
+
+  /**
+   * Returns true if binding was successful, false otherwise. Shortly after a
+   * successful bind, BindListener's onBound() method will be called with
+   * a DependencyManager instance through which you can communicate with the
+   * service.
+   **/
+  public static boolean bindService(Context context, BindListener listener)
+  {
+    DependencyManager dm = new DependencyManager(context, listener);
+    return dm.bindService();
+  }
+
+
+
+  /**
+   * Always unbind each DependencyManager object.
+   **/
+  public void unbindService()
+  {
+    if (null == mStub) {
+      return;
+    }
+
+    mContext.unbindService(mConnection);
+  }
+
+
+
+  private DependencyManager(Context context, BindListener listener)
   {
     mContext = context;
+    mBindListener = listener;
+  }
+
+
+
+  private boolean bindService()
+  {
+    return mContext.bindService(
+        new Intent(IDependencyManager.class.getName()),
+        mConnection, Context.BIND_AUTO_CREATE);
   }
 
 
@@ -85,28 +135,25 @@ public class DependencyManager
   /***************************************************************************
    * Implementation of IDependencyManager API
    **/
-  public void resolveDependencies(String packageName)
-  {
-    // FIXME sort out synchronization
 
-    bindService();
+  /**
+   * Returns false on errors, true otherwise. Will try to resolve the
+   * dependencies for the given package by prompting the user with appropriate
+   * choices.
+   **/
+  public boolean resolveDependencies(String packageName)
+  {
+    if (null == mStub) {
+      return false;
+    }
+
     try {
       mStub.resolveDependencies(packageName);
     } catch (RemoteException ex) {
       Log.e(LTAG, "Exception " + ex.getMessage());
+      return false;
     }
-  }
 
-
-
-  /***************************************************************************
-   * Private functions
-   **/
-  private void bindService()
-  {
-    // FIXME sort out synchronization
-
-    mContext.bindService(new Intent(IDependencyManager.class.getName()),
-        mConnection, Context.BIND_AUTO_CREATE);
+    return true;
   }
 }
