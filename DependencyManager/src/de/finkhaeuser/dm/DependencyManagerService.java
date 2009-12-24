@@ -21,9 +21,17 @@ package de.finkhaeuser.dm;
 
 import android.app.Service;
 
-import android.content.Intent;
-
 import android.os.IBinder;
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+
+import java.util.List;
+import java.util.LinkedList;
+
+import de.finkhaeuser.dm.common.Intents;
+import de.finkhaeuser.dm.common.Schemas;
 
 import android.util.Log;
 
@@ -61,7 +69,100 @@ public class DependencyManagerService extends Service
   {
     public void resolveDependencies(String packageName)
     {
-      Log.d(LTAG, "asked to resolve dependencies for package " + packageName);
+      // Parse intents from the package.
+      List<Intent> il = scanPackageForDependencies(packageName);
+      if (null == il) {
+        // Done. No dependencies are specified, or parsing failed.
+        return;
+      }
+
+      // Filter out resolvable intents
+      il = removeResolvableIntents(il);
+      if (null == il) {
+        // Done. All dependencies are resolvable.
+        return;
+      }
+
+      // For the remaining intents, query the DependencyResolutionProvider for
+      // possible matches.
+      displayChoicesForIntents(il);
+    }
+
+
+
+    public List<Intent> scanPackageForDependencies(String packageName)
+    {
+      return Intents.parseIntents(DependencyManagerService.this, packageName);
+    }
+
+
+
+    public List<Intent> removeResolvableIntents(List<Intent> intents)
+    {
+      if (null == intents || 0 >= intents.size()) {
+        return null;
+      }
+
+
+      PackageManager pm = getPackageManager();
+      LinkedList<Intent> results = new LinkedList<Intent>();
+
+      for (Intent i : intents) {
+        String componentType = i.getStringExtra(
+            Schemas.Client.EXTRA_COMPONENT_TYPE);
+
+        if (Schemas.Client.CT_RECEIVER.equals(componentType)) {
+          // "receiver"
+          List<ResolveInfo> info = pm.queryBroadcastReceivers(i, 0);
+          if (null == info || 0 >= info.size()) {
+            results.add(i);
+          }
+        }
+
+        else if (Schemas.Client.CT_SERVICE.equals(componentType)) {
+          // "service"
+          List<ResolveInfo> info = pm.queryIntentServices(i, 0);
+          if (null == info || 0 >= info.size()) {
+            results.add(i);
+          }
+        }
+
+        else {
+          // "activity", default & lacuna
+          List<ResolveInfo> info = pm.queryIntentActivities(i, 0);
+          if (null == info || 0 >= info.size()) {
+            results.add(i);
+          }
+        }
+      }
+
+
+      if (0 >= results.size()) {
+        return null;
+      }
+      return results;
+    }
+
+
+
+    public void displayChoicesForIntents(List<Intent> intents)
+    {
+//    Uri uri = Uri.parse(String.format("content://%s/%s?%s",
+//            DependencyManagerContract.CONTENT_AUTHORITY,
+//            DependencyManagerContract.PATH_LIST_CANDIDATES,
+//            Intents.serializeIntents(il)));
+//
+//    // XXX This'll need to change. It's just to launch the DpendencyManager
+//    // right now.
+//    Cursor managedCursor = managedQuery(uri,
+//        DependencyColumns.CANDIDATE_PROJECTION,
+//        null,          // WHERE clause.
+//        null,          // WHERE clause value substitution
+//        null);   // Sort order.
+//
+//    Log.d(LTAG, "count: " + managedCursor.getCount());
+//    managedCursor.registerContentObserver(new Foo(managedCursor));
+
       // TODO
     }
   };
