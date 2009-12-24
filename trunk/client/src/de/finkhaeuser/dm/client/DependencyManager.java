@@ -29,6 +29,8 @@ import android.os.RemoteException;
 
 import android.os.Looper;
 
+import java.util.List;
+
 import de.finkhaeuser.dm.IDependencyManager;
 
 import android.util.Log;
@@ -136,24 +138,48 @@ public class DependencyManager
    * Implementation of IDependencyManager API
    **/
 
-  /**
-   * Returns false on errors, true otherwise. Will try to resolve the
-   * dependencies for the given package by prompting the user with appropriate
-   * choices.
-   **/
-  public boolean resolveDependencies(String packageName)
+  public void resolveDependencies(String packageName)
   {
-    if (null == mStub) {
-      return false;
-    }
-
     try {
       mStub.resolveDependencies(packageName);
     } catch (RemoteException ex) {
       Log.e(LTAG, "Exception " + ex.getMessage());
-      return false;
     }
-
-    return true;
   }
+
+
+
+  List<Intent> scanPackageForDependencies(String packageName)
+  {
+    try {
+      return mStub.scanPackageForDependencies(packageName);
+    } catch (RemoteException ex) {
+      Log.e(LTAG, "Exception " + ex.getMessage());
+      return null;
+    }
+  }
+
+
+
+  List<Intent> removeResolvableIntents(List<Intent> intents)
+  {
+    try {
+      return mStub.removeResolvableIntents(intents);
+    } catch (RemoteException ex) {
+      Log.e(LTAG, "Exception " + ex.getMessage());
+      return null;
+    }
+  }
+
+
+
+  void displayChoicesForIntents(List<Intent> intents)
+  {
+    try {
+      mStub.displayChoicesForIntents(intents);
+    } catch (RemoteException ex) {
+      Log.e(LTAG, "Exception " + ex.getMessage());
+    }
+  }
+
 }
