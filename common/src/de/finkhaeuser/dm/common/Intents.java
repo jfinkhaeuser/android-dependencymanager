@@ -145,7 +145,12 @@ public class Intents
 
           else if (xml.getName().equals(Schemas.Client.ELEM_INTENT)) {
             intent = new Intent();
-            // TODO component type attribute
+
+            String ctype = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_COMPONENT_TYPE);
+            if (null != ctype) {
+              intent.putExtra(Schemas.Client.EXTRA_COMPONENT_TYPE, ctype);
+            }
           }
 
           else if (xml.getName().equals(Schemas.Client.ELEM_COMPONENT)) {
