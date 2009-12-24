@@ -21,10 +21,25 @@ package de.finkhaeuser.dm.common;
 
 import android.net.Uri;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
+
+import android.content.res.XmlResourceParser;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import android.util.Xml;
+import android.util.AttributeSet;
+import java.io.IOException;
 
 import java.util.List;
 import java.util.LinkedList;
+
+import de.finkhaeuser.dm.common.Schemas;
+
+import android.util.Log;
 
 
 /**
@@ -32,6 +47,13 @@ import java.util.LinkedList;
  **/
 public class Intents
 {
+  /***************************************************************************
+   * Private constants
+   **/
+  private static final String LTAG = "Intents";
+
+
+
   /***************************************************************************
    * Actions
    **/
@@ -71,6 +93,145 @@ public class Intents
     }
 
     return results;
+  }
+
+
+
+  /**
+   * Parses Intents from the named package's dependency metadata, and returns
+   * them as a list. Returns null if no such metadata was found.
+   **/
+  public static List<Intent> parseIntents(Context context, String packageName)
+  {
+    // Grab applicaton info.
+    PackageManager pm = context.getPackageManager();
+    ApplicationInfo appInfo;
+    try {
+      appInfo = pm.getApplicationInfo(packageName,
+          PackageManager.GET_META_DATA);
+    } catch (PackageManager.NameNotFoundException ex) {
+      Log.e(LTAG, String.format("Package '%s' not found!", packageName));
+      return null;
+    }
+
+    if (null == appInfo) {
+      Log.e(LTAG, String.format("Package '%s' not found!", packageName));
+      return null;
+    }
+
+    // Start parsing metadata
+    XmlResourceParser xml = appInfo.loadXmlMetaData(pm,
+        Schemas.Client.META_DATA_LABEL);
+    if (null == xml) {
+      Log.e(LTAG, String.format("Package '%s' does not contain meta-data named '%s'",
+            packageName, Schemas.Client.META_DATA_LABEL));
+      return null;
+    }
+
+
+    LinkedList<Intent> result = null;
+    Intent intent = null;
+    try {
+      int tagType = xml.next();
+      while (XmlPullParser.END_DOCUMENT != tagType) {
+
+        if (XmlPullParser.START_TAG == tagType) {
+
+          AttributeSet attr = Xml.asAttributeSet(xml);
+
+          if (xml.getName().equals(Schemas.Client.ELEM_DEPENDENCIES)) {
+            result = new LinkedList<Intent>();
+          }
+
+          else if (xml.getName().equals(Schemas.Client.ELEM_INTENT)) {
+            intent = new Intent();
+            // TODO component type attribute
+          }
+
+          else if (xml.getName().equals(Schemas.Client.ELEM_COMPONENT)) {
+            String name = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_NAME);
+            if (null != name) {
+             ComponentName cname = ComponentName.unflattenFromString(name);
+             intent.setComponent(cname);
+            }
+          }
+
+          else if (xml.getName().equals(Schemas.Client.ELEM_ACTION)) {
+            if (null != intent.getAction()) {
+              Log.w(LTAG, String.format("Only one <%s> tag is supported per "
+                    + "<%s>; overwriting previous values.",
+                    Schemas.Client.ELEM_ACTION,
+                    Schemas.Client.ELEM_INTENT));
+            }
+            String name = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_NAME);
+            if (null != name) {
+              intent.setAction(name);
+            }
+          }
+
+          else if (xml.getName().equals(Schemas.Client.ELEM_CATEGORY)) {
+            String name = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_NAME);
+            if (null != name) {
+              intent.addCategory(name);
+            }
+          }
+
+          else if (xml.getName().equals(Schemas.Client.ELEM_DATA)) {
+            String uri_string = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_URI);
+            Uri uri = null;
+            if (null != uri_string) {
+              uri = Uri.parse(uri_string);
+            }
+
+            String mimeType = attr.getAttributeValue(Schemas.Client.SCHEMA,
+                Schemas.Client.ATTR_MIME_TYPE);
+
+            if (null != uri && null != mimeType) {
+              intent.setDataAndType(uri, mimeType);
+            }
+            else if (null != uri) {
+              intent.setData(uri);
+            }
+            else if (null != mimeType) {
+              intent.setType(mimeType);
+            }
+          }
+        }
+
+        else if (XmlPullParser.END_TAG == tagType) {
+
+          if (xml.getName().equals(Schemas.Client.ELEM_INTENT)) {
+            if (null != intent && (null != intent.getData()
+                  || null != intent.getAction() || null != intent.getCategories()
+                  || null != intent.getType() || null != intent.getComponent()))
+            {
+              result.add(intent);
+            }
+          }
+        }
+
+        tagType = xml.next();
+      }
+
+    } catch (XmlPullParserException ex) {
+      Log.e(LTAG, String.format("XML parse exception when parsing metadata for '%s': %s",
+            packageName, ex.getMessage()));
+    } catch (IOException ex) {
+      Log.e(LTAG, String.format("I/O exception when parsing metadata for '%s': %s",
+            packageName, ex.getMessage()));
+    }
+
+    xml.close();
+
+    if (null == result || 0 >= result.size()) {
+      return null;
+    }
+
+    return result;
   }
 
 
