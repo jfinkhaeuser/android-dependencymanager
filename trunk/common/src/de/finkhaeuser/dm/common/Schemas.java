@@ -58,6 +58,11 @@ public class Schemas
     // for pointing to a resource file that follows this schema.
     public static String META_DATA_LABEL        = "de.finkhaeuser.dm.dependency-client";
 
+    // Also not strictly speaking part of the schema, but related: we parse the
+    // ATTR_COMPONENT_TYPE attribute of ELEM_INTENT, and add it to the Intent
+    // as an extra. This is the extra key.
+    public static String EXTRA_COMPONENT_TYPE   = "de.finkhaeuser.dm.extras.COMPONENT_TYPE";
+
     // Schema name
     public static String SCHEMA                 = "http://schemas.finkhaeuser.de/android/dependency-manager/1.0/client";
 
