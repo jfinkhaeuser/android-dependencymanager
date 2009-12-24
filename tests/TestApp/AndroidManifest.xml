@@ -32,9 +32,10 @@
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
-      <meta-data android:name="de.finkhaeuser.dm.dependencies"
-          android:resource="@xml/mandatory"
-        />
     </activity>
+
+    <meta-data android:name="de.finkhaeuser.dm.dependency-client"
+        android:resource="@xml/mandatory"
+      />
   </application>
 </manifest> 

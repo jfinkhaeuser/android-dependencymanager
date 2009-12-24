@@ -18,17 +18,25 @@
   limitations under the License.
 -->
 <dependencies
-     xmlns:dm="http://schemas.finkhaeuser.de/android/dependency-manager/1.0/client/"
+     xmlns:dm="http://schemas.finkhaeuser.de/android/dependency-manager/1.0/client"
   >
 
   <!-- Implicit Intent -->
   <intent dm:component-type="activity">
-    <action dm:name="android.intent.action.BAZ"/>
-    <data dm:scheme="quux" />
+    <action dm:name="android.intent.action.BAZ" />
+    <category dm:name="android.intent.category.FOO" />
+    <category dm:name="android.intent.category.QUUX" />
+    <data dm:uri="http://foo.bar.org/" />
+  </intent>
+
+  <!-- Implicit Intent with mime-type -->
+  <intent dm:component-type="service">
+    <action dm:name="foo.bar.QuuxService" />
+    <data dm:mimeType="text/plain" />
   </intent>
 
   <!-- Explicit Intent -->
   <intent dm:component-type="receiver">
-    <component dm:name="foo.bar.BazReceiver" />
+    <component dm:name="foo.bar/.BazReceiver" />
   </intent>
 </dependencies>
