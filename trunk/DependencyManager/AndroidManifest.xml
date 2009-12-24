@@ -47,7 +47,13 @@
     <service android:name=".DependencyManagerService"
         android:exported="true"
         android:process="de.finkhaeuser.dm"
-      />
+      >
+      <intent-filter>
+        <!-- These are the interfaces supported by the service, which
+             you can bind to. -->
+        <action android:name="de.finkhaeuser.dm.IDependencyManager" />
+      </intent-filter>
+    </service>
 
   </application>
 </manifest>
