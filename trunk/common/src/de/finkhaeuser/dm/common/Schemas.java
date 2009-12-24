@@ -61,6 +61,27 @@ public class Schemas
     // Schema name
     public static String SCHEMA                 = "http://schemas.finkhaeuser.de/android/dependency-manager/1.0/client";
 
-    // TODO
+    // Element names
+    public static String ELEM_DEPENDENCIES      = "dependencies";
+    public static String ELEM_INTENT            = "intent";
+    public static String ELEM_COMPONENT         = "component";
+    public static String ELEM_ACTION            = "action";
+    public static String ELEM_CATEGORY          = "category";
+    public static String ELEM_DATA              = "data";
+
+    // Attributes
+    // - ATTR_COMPONENT_TYPE is optional in ELEM_INTENT
+    // - ATTR_NAME is required in component, action and category
+    // - all other attributes are optional in ELEM_DATA, but one of them must
+    //   be contained.
+    public static String ATTR_COMPONENT_TYPE    = "component-type";
+    public static String ATTR_NAME              = "name";
+    public static String ATTR_URI               = "uri";
+    public static String ATTR_MIME_TYPE         = "mimeType";
+
+    // Legal values for ATTR_COMPONENT_TYPE
+    public static String CT_ACTIVITY            = "activity"; // lacuna & default
+    public static String CT_RECEIVER            = "receiver";
+    public static String CT_SERVICE             = "service";
   }
 }
