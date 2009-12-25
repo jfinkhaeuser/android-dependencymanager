@@ -50,7 +50,7 @@ public class DependencyManagerContract
   /***************************************************************************
    * Fields returned as part of CANDIDATE_TYPE/CANDIDATE_LIST_TYPE.
    **/
-  public static class DependencyColumns
+  public static class CandidateColumns
   {
     // ** Results always include:
     // STORE_PACKAGE is TEXT NOT NULL, descriping the package name of the store
@@ -59,6 +59,9 @@ public class DependencyManagerContract
     // STORE_DISPLAY_NAME is TEXT NOT NULL, describing the display name of the
     //    store app returning these results
     public static final String STORE_DISPLAY_NAME   = "dm_store_display_name";
+    // DISPLAY_NAME is TEXT, describing either the display name of the package
+    //    that would satisfy a dependency, or the external search entry.
+    public static final String DISPLAY_NAME         = "dm_display_name";
     // ICON_URI is TEXT NOT NULL, to be parsed as a URI. The URI's scheme
     //    determines how to access the icon image. The icon should represent the
     //    package described via APP_PACAKGE et al. if those fields are returned,
@@ -77,9 +80,6 @@ public class DependencyManagerContract
     // APP_PACKAGE is TEXT, describing the package name of the package that
     //    would satisfy a dependency.
     public static final String APP_PACKAGE          = "dm_app_package";
-    // APP_DISPLAY_NAME is TEXT, describing the display name of the package
-    //    that would satisfy a dependency.
-    public static final String APP_DISPLAY_NAME     = "dm_app_display_name";
     // APP_VENDOR_NAME is TEXT, describing the vendor/publisher of the package.
     public static final String APP_VENDOR_NAME      = "dm_app_vendor_name";
     // APP_PRICE is INTEGER, describing the price of the package in their
@@ -96,10 +96,10 @@ public class DependencyManagerContract
     public static final String[] CANDIDATE_PROJECTION = {
       STORE_PACKAGE,
       STORE_DISPLAY_NAME,
+      DISPLAY_NAME,
       ICON_URI,
       EXTERNAL_SEARCH_URI,
       APP_PACKAGE,
-      APP_DISPLAY_NAME,
       APP_VENDOR_NAME,
       APP_PRICE,
       APP_CURRENCY,
