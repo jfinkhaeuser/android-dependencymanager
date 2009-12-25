@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.LinkedList;
 
 import de.finkhaeuser.dm.common.DependencyManagerContract;
-import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
+import de.finkhaeuser.dm.common.DependencyManagerContract.CandidateColumns;
 import de.finkhaeuser.dm.common.Intents;
 
 import android.util.Log;
@@ -60,16 +60,16 @@ public class DependencyResolutionProvider extends ContentProvider
   private static final String CANDIDATE_TYPE        = DependencyManagerContract.CANDIDATE_TYPE;
 
   // CANDIDATE_TYPE-related fields
-  private static final String STORE_PACKAGE         = DependencyColumns.STORE_PACKAGE;
-  private static final String STORE_DISPLAY_NAME    = DependencyColumns.STORE_DISPLAY_NAME;
-  private static final String ICON_URI              = DependencyColumns.ICON_URI;
-  private static final String EXTERNAL_SEARCH_URI   = DependencyColumns.EXTERNAL_SEARCH_URI;
-  private static final String APP_PACKAGE           = DependencyColumns.APP_PACKAGE;
-  private static final String APP_DISPLAY_NAME      = DependencyColumns.APP_DISPLAY_NAME;
-  private static final String APP_VENDOR_NAME       = DependencyColumns.APP_VENDOR_NAME;
-  private static final String APP_PRICE             = DependencyColumns.APP_PRICE;
-  private static final String APP_CURRENCY          = DependencyColumns.APP_CURRENCY;
-  private static final String APP_MATCHES           = DependencyColumns.APP_MATCHES;
+  private static final String STORE_PACKAGE         = CandidateColumns.STORE_PACKAGE;
+  private static final String STORE_DISPLAY_NAME    = CandidateColumns.STORE_DISPLAY_NAME;
+  private static final String DISPLAY_NAME          = CandidateColumns.DISPLAY_NAME;
+  private static final String ICON_URI              = CandidateColumns.ICON_URI;
+  private static final String EXTERNAL_SEARCH_URI   = CandidateColumns.EXTERNAL_SEARCH_URI;
+  private static final String APP_PACKAGE           = CandidateColumns.APP_PACKAGE;
+  private static final String APP_VENDOR_NAME       = CandidateColumns.APP_VENDOR_NAME;
+  private static final String APP_PRICE             = CandidateColumns.APP_PRICE;
+  private static final String APP_CURRENCY          = CandidateColumns.APP_CURRENCY;
+  private static final String APP_MATCHES           = CandidateColumns.APP_MATCHES;
 
   // IDs for URI matches.
   private static final int ID_LIST_CANDIDATES       = 1;
