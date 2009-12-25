@@ -30,7 +30,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 
 import de.finkhaeuser.dm.common.DependencyManagerContract;
-import de.finkhaeuser.dm.common.DependencyManagerContract.DependencyColumns;
+import de.finkhaeuser.dm.common.DependencyManagerContract.CandidateColumns;
 import de.finkhaeuser.dm.common.Intents;
 
 import java.util.List;
@@ -66,16 +66,16 @@ public class TestStoreProvider extends ContentProvider
   private static final String CANDIDATE_TYPE        = DependencyManagerContract.CANDIDATE_TYPE;
 
   // CANDIDATE_TYPE-related fields
-  private static final String STORE_PACKAGE         = DependencyColumns.STORE_PACKAGE;
-  private static final String STORE_DISPLAY_NAME    = DependencyColumns.STORE_DISPLAY_NAME;
-  private static final String ICON_URI              = DependencyColumns.ICON_URI;
-  private static final String EXTERNAL_SEARCH_URI   = DependencyColumns.EXTERNAL_SEARCH_URI;
-  private static final String APP_PACKAGE           = DependencyColumns.APP_PACKAGE;
-  private static final String APP_DISPLAY_NAME      = DependencyColumns.APP_DISPLAY_NAME;
-  private static final String APP_VENDOR_NAME       = DependencyColumns.APP_VENDOR_NAME;
-  private static final String APP_PRICE             = DependencyColumns.APP_PRICE;
-  private static final String APP_CURRENCY          = DependencyColumns.APP_CURRENCY;
-  private static final String APP_MATCHES           = DependencyColumns.APP_MATCHES;
+  private static final String STORE_PACKAGE         = CandidateColumns.STORE_PACKAGE;
+  private static final String STORE_DISPLAY_NAME    = CandidateColumns.STORE_DISPLAY_NAME;
+  private static final String DISPLAY_NAME          = CandidateColumns.DISPLAY_NAME;
+  private static final String ICON_URI              = CandidateColumns.ICON_URI;
+  private static final String EXTERNAL_SEARCH_URI   = CandidateColumns.EXTERNAL_SEARCH_URI;
+  private static final String APP_PACKAGE           = CandidateColumns.APP_PACKAGE;
+  private static final String APP_VENDOR_NAME       = CandidateColumns.APP_VENDOR_NAME;
+  private static final String APP_PRICE             = CandidateColumns.APP_PRICE;
+  private static final String APP_CURRENCY          = CandidateColumns.APP_CURRENCY;
+  private static final String APP_MATCHES           = CandidateColumns.APP_MATCHES;
 
   // IDs for URI matches.
   private static final int ID_LIST_CANDIDATES       = 1;
@@ -139,27 +139,16 @@ public class TestStoreProvider extends ContentProvider
     Log.d(LTAG, "Query: " + uri);
 
     // Create cursor.
-    MatrixCursor c = new MatrixCursor(new String[] {
-          STORE_PACKAGE,
-          STORE_DISPLAY_NAME,
-          ICON_URI,
-          EXTERNAL_SEARCH_URI,
-          APP_PACKAGE,
-          APP_DISPLAY_NAME,
-          APP_VENDOR_NAME,
-          APP_PRICE,
-          APP_CURRENCY,
-          APP_MATCHES
-        }, 3);
+    MatrixCursor c = new MatrixCursor(CandidateColumns.CANDIDATE_PROJECTION, 3);
 
     // First entry: match all intents
     c.addRow(new Object[] {
           getContext().getPackageName(),    // STORE_PACKAGE
           "TestStore",                      // STORE_DISPLAY_NAME
+          "Example App 1",                  // DISPLAY_NAME
           null, // FIXME
           null,                             // EXTERNAL_SEARCH_URI
           "com.example.app1",               // APP_PACKAGE
-          "Example App 1",                  // APP_DISPLAY_NAME
           "Vendor of App 1",                // APP_VENDOR_NAME
           new Integer(0),                   // APP_PRICE
           "EUR",                            // APP_CURRENCY
@@ -172,10 +161,10 @@ public class TestStoreProvider extends ContentProvider
     c.addRow(new Object[] {
           getContext().getPackageName(),    // STORE_PACKAGE
           "TestStore",                      // STORE_DISPLAY_NAME
+          "Example App 2",                  // DISPLAY_NAME
           null, // FIXME
           null,                             // EXTERNAL_SEARCH_URI
           "com.example.app2",               // APP_PACKAGE
-          "Example App 2",                  // APP_DISPLAY_NAME
           "Vendor of App 2",                // APP_VENDOR_NAME
           new Integer(299),                 // APP_PRICE
           "USD",                            // APP_CURRENCY
@@ -187,10 +176,10 @@ public class TestStoreProvider extends ContentProvider
     c.addRow(new Object[] {
           "com.android.vending",                // STORE_PACKAGE
           "Android Market",                     // STORE_DISPLAY_NAME
+          "Search in Android Market...",        // DISPLAY_NAME
           null, // FIXME
           "market://search?q=pub:OpenIntents",  // EXTERNAL_SEARCH_URI
           null,                                 // APP_PACKAGE
-          null,                                 // APP_DISPLAY_NAME
           null,                                 // APP_VENDOR_NAME
           null,                                 // APP_PRICE
           null,                                 // APP_CURRENCY
