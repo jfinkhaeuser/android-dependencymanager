@@ -158,11 +158,10 @@ class AggregateCursor extends AbstractCursor
           + "from a cursor with different column count.");
     }
     for (int i = 0 ; i < columnCount ; ++i) {
-      String otherName = other.getColumnName(i);
-      if (!columnNames[i].equals(otherName)) {
+      int otherIndex = other.getColumnIndex(columnNames[i]);
+      if (-1 == otherIndex) {
         throw new IllegalArgumentException("Invalid cursor to update from; "
-            + "expected column '" + columnNames[i] + "' but got column '"
-            + otherName + "'!");
+            + "expected column '" + columnNames[i] + "' not found!");
       }
     }
 
