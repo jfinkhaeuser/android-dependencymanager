@@ -53,6 +53,7 @@ interface IDependencyManager
    **/
   List<Intent> removeResolvableIntents(in List<Intent> intents);
 
+
   /**
    * Displays a dialog with a choice of packages that would serve the specified
    * intents.

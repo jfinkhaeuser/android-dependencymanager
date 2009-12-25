@@ -29,6 +29,7 @@ import android.content.pm.ResolveInfo;
 
 import java.util.List;
 import java.util.LinkedList;
+import java.util.ArrayList;
 
 import de.finkhaeuser.dm.common.Intents;
 import de.finkhaeuser.dm.common.Schemas;
@@ -147,23 +148,22 @@ public class DependencyManagerService extends Service
 
     public void displayChoicesForIntents(List<Intent> intents)
     {
-//    Uri uri = Uri.parse(String.format("content://%s/%s?%s",
-//            DependencyManagerContract.CONTENT_AUTHORITY,
-//            DependencyManagerContract.PATH_LIST_CANDIDATES,
-//            Intents.serializeIntents(il)));
-//
-//    // XXX This'll need to change. It's just to launch the DpendencyManager
-//    // right now.
-//    Cursor managedCursor = managedQuery(uri,
-//        DependencyColumns.CANDIDATE_PROJECTION,
-//        null,          // WHERE clause.
-//        null,          // WHERE clause value substitution
-//        null);   // Sort order.
-//
-//    Log.d(LTAG, "count: " + managedCursor.getCount());
-//    managedCursor.registerContentObserver(new Foo(managedCursor));
+      if (null == intents || 0 >= intents.size()) {
+        Log.e(LTAG, "Intent list is empty.");
+        return;
+      }
 
-      // TODO
+      // In order to serialize the intents list into a new Intent, we'll need
+      // to create an ArrayList first.
+      ArrayList<Intent> al = new ArrayList<Intent>(intents);
+
+      // Now create the Intent to launch ResolverActivity with, passing the
+      // array list as an extra.
+      Intent i = new Intent(DependencyManagerService.this, ResolverActivity.class);
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      i.putParcelableArrayListExtra(ResolverActivity.EXTRA_INTENTS, al);
+
+      startActivity(i);
     }
   };
 }
