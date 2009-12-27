@@ -435,16 +435,23 @@ class AggregateCursor extends AbstractCursor
 
   public byte[] getBlob(int column)
   {
-    // FIXME
-    return null;
-//    return String.valueOf(get(column));
+    Object value = get(column);
+    if (null == value) {
+      return null;
+    }
+
+    return String.valueOf(value).getBytes();
   }
 
 
 
   public String getString(int column)
   {
-    return String.valueOf(get(column));
+    Object value = get(column);
+    if (null == value) {
+      return null;
+    }
+    return String.valueOf(value);
   }
 
 
