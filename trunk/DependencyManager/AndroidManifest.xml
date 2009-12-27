@@ -26,7 +26,6 @@
   <application android:label="@string/app_name">
     <activity android:name=".DependencyManagerSettings"
         android:label="@string/app_name"
-        android:process="de.finkhaeuser.dm"
       >
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
@@ -34,19 +33,26 @@
       </intent-filter>
     </activity>
 
+    <!-- This activity displays a list of packages that can be installed to
+         resolve dependencies. -->
+    <activity android:name=".ResolverActivity"
+        android:theme="@android:style/Theme.Dialog"
+      />
+
     <!-- This ContentProvider provides information for resolving
-         dependencies. -->
+         dependencies.
+         FIXME document processes
+         -->
     <provider android:name=".DependencyResolutionProvider"
         android:authorities="de.finkhaeuser.dm"
         android:exported="true"
         android:multiprocess="false"
-        android:process="de.finkhaeuser.dm"
+        android:process="de.finkhaeuser.dm.provider"
       />
 
     <!-- Main DependencyManager service -->
     <service android:name=".DependencyManagerService"
         android:exported="true"
-        android:process="de.finkhaeuser.dm"
       >
       <intent-filter>
         <!-- These are the interfaces supported by the service, which
