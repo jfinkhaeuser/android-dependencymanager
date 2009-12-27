@@ -18,5 +18,18 @@
   limitations under the License.
 -->
 <resources>
+  <!-- App name -->
   <string name="app_name">Dependency Manager</string>
+
+  <!-- Title for the candidate list -->
+  <string name="candidate_list_title">Candidates</string>
+
+  <!-- Default values for the fields in candidate list entries -->
+  <string name="def_display_name">unknown app name</string>
+  <string name="def_app_vendor_name">unknown vendor</string>
+  <string name="def_store_display_name">unknown source</string>
+  <string name="def_app_price">unknown price</string>
+
+  <!-- Other label texts -->
+  <string name="app_price_free">free</string>
 </resources>
