@@ -19,12 +19,20 @@
 
 package de.finkhaeuser.dm.common;
 
+import android.net.Uri;
+
 /**
  * Contract between DependencyManager and dependency information data sources,
  * as well as clients of DependencyManager.
  **/
 public class DependencyManagerContract
 {
+  // Part of the contract is a list of URIs that clients can try to open in
+  // order to install DependencyManager.
+  public static final Uri INSTALL_URIS[]            = {
+    Uri.parse("market://search?q=pname:de.finkhaeuser.dm"), // Install via Android Market
+  };
+
   // Authority for DependencyResolutionProvider
   public static final String CONTENT_AUTHORITY      = "de.finkhaeuser.dm";
 
