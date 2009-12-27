@@ -87,6 +87,7 @@ public class DependencyManagerContract
     public static final String APP_PRICE            = "dm_app_price";
     // APP_CURRENCY is TEXT, specifying the ISO 4217 code for the currency the
     //    price above is given in (see http://en.wikipedia.org/wiki/ISO_4217).
+    //    A price of zero or less indicates a free app.
     public static final String APP_CURRENCY         = "dm_app_currency";
     // APP_MATCHES is TEXT, specifying a list of query-string encoded intents
     //    that this package serves.
